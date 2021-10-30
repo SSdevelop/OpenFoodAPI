@@ -1,0 +1,4 @@
+flask
+wheel
+flask-mongoengine
+flask_cors
