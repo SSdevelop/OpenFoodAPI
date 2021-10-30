@@ -1,4 +1,4 @@
-# COMP3122-Project
+# COMP3122-Project-Group11
 
 Authors:
 - Srijan SRIVASTAVA (19085314D)
