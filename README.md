@@ -1,8 +1,9 @@
-# COMP3122-Project
+# COMP3122-Project-Group11
 
 Authors:
 - Srijan SRIVASTAVA (19085314D)
-- Adilet Daniiarov (18078666D)
+- Adilet DANIIAROV (18078666D)
+- Mario CHANGI (17086999D)
 
 ## OpenFood API
 
