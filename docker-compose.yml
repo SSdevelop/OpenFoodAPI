@@ -1,0 +1,23 @@
+version: "3.3"
+services:
+  store:
+    container-name: store
+    build:
+      context: ./services/store
+      dockerfile: Dockerfile
+    ports:
+      - "9000:9000"
+    links:
+      - store-db
+
+  store-db:
+    container-name: store-db
+    image: mongo
+    hostname: store-db
+    enviornment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=pass
+    volumes:
+      - ./services/store/init-db.js:/docker-entrypoint-initdb.d/mongo-init.js
+    ports:
+      - "27017:27017"
