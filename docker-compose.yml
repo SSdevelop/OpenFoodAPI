@@ -1,23 +1,27 @@
-version: "3.3"
+version: '3.3'
 services:
-  store:
-    container-name: store
+  menu:
+    container_name: menu
     build:
-      context: ./services/store
+      context: ./services/menu
       dockerfile: Dockerfile
     ports:
-      - "9000:9000"
+      - '9001:9001'
     links:
-      - store-db
-
-  store-db:
-    container-name: store-db
+      - menu-db
+    depends_on:
+      - menu-db
+  menu-db:
+    container_name: menu-db
     image: mongo
-    hostname: store-db
-    enviornment:
-      - MONGO_INITDB_ROOT_USERNAME=root
-      - MONGO_INITDB_ROOT_PASSWORD=pass
+    hostname: menu-db
+    environment:
+      ENV FLASK_APP: app.py
+      ENV FLASK_RUN_HOST: 0.0.0.0
+      MONGO_SERVER_HOST: mongo
+      MONGO_SERVER_PORT: 27017
+      MONGO_USERNAME: comp3122
+      MONGO_PASSWORD: 12345
     volumes:
-      - ./services/store/init-db.js:/docker-entrypoint-initdb.d/mongo-init.js
-    ports:
-      - "27017:27017"
+      - ./services/menu/init-db.js:/docker-entrypoint-initdb.d/mongo-init.js
+    restart: on-failure
