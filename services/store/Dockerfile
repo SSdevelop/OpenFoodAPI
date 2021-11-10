@@ -8,6 +8,7 @@ WORKDIR /app
 COPY . /app
 
 # Installing the required packages from requirements.txt
+RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
 
 # Running the python script when the container launches
