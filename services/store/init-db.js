@@ -24,6 +24,10 @@ db.createCollection('information', {
                     bsonType: "bool",
                     description: "Boolean: True is restaurant is open."
                 },
+                reasonClose: {
+                    bsonType: "string",
+                    description: "Why is the restaurant closed"
+                },
                 priceBucket: {
                     bsonType: "string",
                     description: "Required: Tells about the price range."
