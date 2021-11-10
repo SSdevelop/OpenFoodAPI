@@ -1,0 +1,5 @@
+flask
+pymongo
+Flask-PyMongo
+prometheus-flask-exporter
+flask_cors

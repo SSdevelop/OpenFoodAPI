@@ -6,6 +6,7 @@ Authors:
 - Mario CHANGI (17086999D)
 - Diwakar SINGH (18080434D)
 
+
 ## OpenFood API
 
 The API will be created using event-driven microservice based architecture.
