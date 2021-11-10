@@ -4,6 +4,8 @@ Authors:
 - Srijan SRIVASTAVA (19085314D)
 - Adilet DANIIAROV (18078666D)
 - Mario CHANGI (17086999D)
+- Diwakar SINGH (18080434D)
+
 
 ## OpenFood API
 
