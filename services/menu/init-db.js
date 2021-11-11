@@ -41,6 +41,11 @@ db.createCollection('menu', {
           uniqueItems: true,
           description: 'Must be unique string and is required',
         },
+        store_id: {
+          bsonType: 'string',
+          uniqueItems: true,
+          description: 'Must be unique string and is required',
+        },
         title: {
           bsonType: 'string',
           description: 'The name of the men (by locale).',
@@ -49,6 +54,7 @@ db.createCollection('menu', {
           bsonType: 'string',
           description: 'An optional subtitle for the menu (by locale).',
         },
+
         // service_availablity: {
         //   bsonType: ['array'],
         //   required: [],
@@ -109,6 +115,7 @@ db.createCollection('category', {
 
 db.menu.insertOne({
   id: 'empty_menu_id',
+  store_id: '1',
   title: 'Empty Menu',
   subtitle: 'Empty Meny Subtitle',
   category_ids: ['Sandwiches', 'Snacks'],
