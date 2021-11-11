@@ -50,12 +50,21 @@ db.createCollection('menu', {
           description: 'An optional subtitle for the menu (by locale).',
         },
         // service_availablity: {
-        //   bsonType: "object",
+        //   bsonType: ['array'],
         //   required: [],
-        //   properties:{
-        //     day_of_week: "",
-        //   }
+        //   properties: {
+        //     time_periods: '',
+        //     day_of_week: '',
+        //   },
         // },
+        category_ids: {
+          bsonType: ['array'],
+          description:
+            'All of the IDs for the menu categories that will be made available while this menu is active.',
+          items: {
+            bsonType: 'string',
+          },
+        },
       },
     },
   },
@@ -100,45 +109,57 @@ db.createCollection('category', {
 
 db.menu.insertOne({
   id: 'empty_menu_id',
-  title: {
-    translations: {
-      en_us: 'Empty Menu',
-    },
-  },
-  service_availability: [
-    {
-      day_of_week: 'monday',
-      time_periods: [{ start_time: '00:00', end_time: '23:59' }],
-    },
-    {
-      day_of_week: 'tuesday',
-      time_periods: [{ start_time: '00:00', end_time: '23:59' }],
-    },
-    {
-      day_of_week: 'wednesday',
-      time_periods: [{ start_time: '00:00', end_time: '23:59' }],
-    },
-    {
-      day_of_week: 'thursday',
-      time_periods: [{ start_time: '00:00', end_time: '23:59' }],
-    },
-    {
-      day_of_week: 'friday',
-      time_periods: [{ start_time: '00:00', end_time: '23:59' }],
-    },
-    {
-      day_of_week: 'saturday',
-      time_periods: [{ start_time: '00:00', end_time: '23:59' }],
-    },
-    {
-      day_of_week: 'sunday',
-      time_periods: [{ start_time: '00:00', end_time: '23:59' }],
-    },
-  ],
-  category_ids: [],
+  title: 'Empty Menu',
+  subtitle: 'Empty Meny Subtitle',
+  category_ids: ['Sandwiches', 'Snacks'],
 })
 
-db.createCollection('takes')
-db.takes.insertOne({ student_id: '33333', course_id: 'COMP1234', credits: 1 })
-db.takes.insertOne({ student_id: '22222', course_id: 'COMP1234', credits: 1 })
-db.takes.insertOne({ student_id: '22222', course_id: 'COMP2345', credits: 3 })
+db.item.insertMany([
+  {
+    id: 'Coffee',
+    description: 'Deliciously roasted beans',
+    title: 'Coffee',
+    price: 300,
+  },
+  {
+    id: 'Blueberry',
+    description: 'Delicious Blueberry',
+    title: 'Blueberry',
+    price: 5,
+  },
+  {
+    id: 'Muffin',
+    description: 'Great for afternoon snack time!',
+    title: 'Fresh-baked muffin',
+    price: 5,
+  },
+  {
+    id: 'Chicken-sandwich',
+    description: 'Deliciously roasted beans',
+    title: 'Blueberry',
+    price: 5,
+  },
+])
+
+db.category.insertMany([
+  {
+    entities: [
+      {
+        type: 'ITEM',
+        id: 'Muffin',
+      },
+    ],
+    id: 'Snacks',
+    title: 'Snacks',
+  },
+  {
+    entities: [
+      {
+        type: 'ITEM',
+        id: 'Chicken-sandwich',
+      },
+    ],
+    id: 'Sandwiches',
+    title: 'Sandwiches',
+  },
+])
