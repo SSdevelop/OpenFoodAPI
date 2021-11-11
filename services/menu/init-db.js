@@ -12,6 +12,11 @@ db.createCollection('item', {
           uniqueItems: true,
           description: 'Must be unique string and is required',
         },
+        store_id: {
+          bsonType: 'string',
+          uniqueItems: true,
+          description: 'Must be unique string and is required',
+        },
         description: {
           bsonType: 'string',
           description:
@@ -86,6 +91,11 @@ db.createCollection('category', {
           bsonType: 'string',
           description: 'Must be unique string and is required',
         },
+        store_id: {
+          bsonType: 'string',
+          uniqueItems: true,
+          description: 'Must be unique string and is required',
+        },
         entities: {
           bsonType: ['array'],
           items: {
@@ -123,25 +133,29 @@ db.menu.insertOne({
 
 db.item.insertMany([
   {
-    id: 'Coffee',
-    description: 'Deliciously roasted beans',
+    id: 'Coffee2',
+    store_id: '1',
+    description: 'Deliciously roasted beans 2',
     title: 'Coffee',
     price: 300,
   },
   {
     id: 'Blueberry',
+    store_id: '1',
     description: 'Delicious Blueberry',
     title: 'Blueberry',
     price: 5,
   },
   {
     id: 'Muffin',
+    store_id: '1',
     description: 'Great for afternoon snack time!',
     title: 'Fresh-baked muffin',
     price: 5,
   },
   {
     id: 'Chicken-sandwich',
+    store_id: '1',
     description: 'Deliciously roasted beans',
     title: 'Blueberry',
     price: 5,
@@ -158,6 +172,7 @@ db.category.insertMany([
     ],
     id: 'Snacks',
     title: 'Snacks',
+    store_id: '1',
   },
   {
     entities: [
@@ -168,5 +183,6 @@ db.category.insertMany([
     ],
     id: 'Sandwiches',
     title: 'Sandwiches',
+    store_id: '1',
   },
 ])
