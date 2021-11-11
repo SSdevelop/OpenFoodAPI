@@ -34,7 +34,7 @@ db.createCollection('menu', {
   validator: {
     $jsonSchema: {
       bsonType: 'object',
-      required: ['id', 'title', 'price'],
+      required: ['id', 'title'],
       properties: {
         id: {
           bsonType: 'string',
