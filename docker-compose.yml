@@ -1,11 +1,11 @@
-version: "3.3"
+version: '3.3'
 services:
   store:
     container_name: store
     depends_on:
       - store_db
     build:
-      context: ./services/store
+      context: ./services/menu
       dockerfile: Dockerfile
     environment:
       - MONGO_USERNAME=store
@@ -66,3 +66,4 @@ services:
       - prometheus
     ports:
       - "3000:3000"
+
