@@ -3,7 +3,14 @@ global:
   external_labels:
     monitor: 'app'
 scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['prometheus:9090']
   - job_name: 'store'
     scrape_interval: 15s
     static_configs:
       - targets: ['store:9000']
+  - job_name: 'menu'
+    scrape_interval: 15s
+    static_configs:
+      - targets: ['menu:9001']

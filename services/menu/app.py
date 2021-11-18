@@ -2,12 +2,13 @@
 import os
 from flask import Flask, jsonify, request
 from pymongo import MongoClient
-# from prometheus_flask_exporter import PrometheusMetrics
+from prometheus_flask_exporter import PrometheusMetrics
 
 
 # init our app
 app = Flask(__name__)
-
+metrics = PrometheusMetrics(app)
+metrics.info("app_info", "Menu API", version="1.0.0")
 
 # the status codes
 
@@ -25,27 +26,23 @@ SUCCESS_CODE = {
 
 
 def get_db():
-    client = MongoClient(host=os.environ['MONGO_SERVER_HOST'],
-                         # convert the port number to make sure its an integer
-                         port=int(os.environ['MONGO_SERVER_PORT']),
-                         username=os.environ['MONGO_USERNAME'],
-                         password=os.environ['MONGO_PASSWORD'],
-                         )
-    if client:
-        db = client["university"]
-        return db
-    else:
-        return ERR_CODE, 404   # if cant connect then return error
+    try:
+        client = MongoClient(host=os.environ['MONGO_SERVER_HOST'],
+                            # convert the port number to make sure its an integer
+                            port=int(os.environ['MONGO_SERVER_PORT']),
+                            username=os.environ['MONGO_USERNAME'],
+                            password=os.environ['MONGO_PASSWORD'],
+                            )
+        if client:
+            db = client["menu"]
+            return db
+        else:
+            return jsonify(ERR_CODE_NOT_FOUND), 404   # if cant connect then return error
+    except:
+        return jsonify({'error': 'Problem with connecting to DB'}), 500
 
 
-@app.route('/')
-def hello():
-    return "Hello bro!"
-
-# GET Menu
-
-
-@app.route('/stores/<store_id>/menus', methods=['GET'])
+@app.route('/menus/<store_id>', methods=['GET'])
 def getMenu(store_id):
 
     # call the stores
@@ -57,13 +54,13 @@ def getMenu(store_id):
     if menus:
         result = menus
     else:
-        return jsonify(ERR_CODE), 404
+        return jsonify(ERR_CODE_NOT_FOUND), 404
     return jsonify(result), 200
 
 # PUT upload Menu
 
 
-@app.route('/stores/<store_id>/menus', methods=['PUT'])
+@app.route('/menus/<store_id>', methods=['PUT'])
 def uploadMenu(store_id):
     db = get_db()
 
@@ -80,7 +77,7 @@ def uploadMenu(store_id):
         try:
             db.menu.update_one(result[0])
         except:
-            print "DB Error"
+            print("DB Error")
 
         return jsonify("Menu is updated"), 409
     # if the stud does not exist then add him
@@ -91,14 +88,15 @@ def uploadMenu(store_id):
         try:
             db.menu.insert_one(result[0])
         except:
-            print "DB Error"
+            print("DB Error")
     return jsonify("Success!"), 200
 
 # POST update Item
 
-
-@app.route('stores/{store_id}/menus/items/{item_id}', methods=['POST'])
-def getStudentsCoursesById(store_id, item_id):
+# give the data in form of request body and not parameters.
+# use the correct syntax for updating.
+@app.route('/menus/set-item', methods=['POST'])
+def setItemById(store_id, item_id):
     db = get_db()
 
     item = db.items.find_one({'item_id': item_id, 'store_id': store_id})
@@ -122,11 +120,11 @@ def getStudentsCoursesById(store_id, item_id):
         try:
             db.item.update_one(updated_item)
         except:
-            print "DB Error"
+            print("DB Error")
 
-        return jsonify(result), 200
+        return jsonify(SUCCESS_CODE), 200
     else:
-        return jsonify(ERR_CODE), 404
+        return jsonify(ERR_CODE_NOT_FOUND), 404
 
 
 if __name__ == "__main__":

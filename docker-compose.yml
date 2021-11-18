@@ -5,7 +5,7 @@ services:
     depends_on:
       - store_db
     build:
-      context: ./services/menu
+      context: ./services/store
       dockerfile: Dockerfile
     environment:
       - MONGO_USERNAME=store
@@ -28,21 +28,34 @@ services:
     ports:
       - "27017:27017"
   
-  store_db_express:
-    container_name: store_db_express
-    image: mongo-express
-    restart: always
-    depends_on:
-      - store_db
-    ports:
-      - "8081:8081"
+  menu:
+    container_name: menu
+    build:
+      context: ./services/menu
+      dockerfile: Dockerfile
     environment:
-      - ME_CONFIG_BASICAUTH_USERNAME=store
-      - ME_CONFIG_BASICAUTH_PASSWORD=store1234
-      - ME_CONFIG_MONGODB_PORT=27017
-      - ME_CONFIG_MONGODB_SERVER=store-db
-      - ME_CONFIG_MONGODB_ADMINUSERNAME=store
-      - ME_CONFIG_MONGODB_ADMINPASSWORD=pass
+      - MONGO_USERNAME=comp3122
+      - MONGO_PASSWORD=12345
+      - MONGO_SERVER_HOST=menu_db
+      - MONGO_SERVER_PORT=27018
+    ports:
+      - '9001:9001'
+    links:
+      - menu_db
+    depends_on:
+      - menu_db
+  menu_db:
+    container_name: menu_db
+    image: mongo
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=menu
+      - MONGO_INITDB_ROOT_PASSWORD=pass
+      - MONGO_INITDB_DATABASE=admin
+    volumes:
+      - ./services/menu/init-db.js:/docker-entrypoint-initdb.d/mongo-init.js
+    ports:
+      - '27018:27017'
+    restart: on-failure
   
   prometheus:
     container_name: prometheus

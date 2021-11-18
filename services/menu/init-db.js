@@ -1,4 +1,4 @@
-db.auth('comp3122', '12345')
+db.auth('menu', 'pass')
 db = db.getSiblingDB('menu')
 
 db.createCollection('item', {
