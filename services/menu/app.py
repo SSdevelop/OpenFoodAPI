@@ -1,14 +1,16 @@
 # importing required modules
-import os
-from flask import Flask, jsonify, abort, request
-from pymongo import MongoClient
+from os import environ
+from flask import Flask, jsonify, abort, request, json
 from prometheus_flask_exporter import PrometheusMetrics
+from flask_cors import CORS
+from flask_pymongo import PyMongo
+from sys import exit, version
 
 
-# init our app
-app = Flask(__name__)
-metrics = PrometheusMetrics(app)
-metrics.info("app_info", "Menu API", version="1.0.0")
+# # init our app
+# app = Flask(__name__)
+# metrics = PrometheusMetrics(app)
+# metrics.info("app_info", "Menu API", version="1.0.0")
 
 # the status codes
 
@@ -25,58 +27,70 @@ SUCCESS_CODE = {
 }
 
 
-def get_db():
-    try:
-        client = MongoClient(host=os.environ['MONGO_SERVER_HOST'],
-                             # convert the port number to make sure its an integer
-                             port=int(os.environ['MONGO_SERVER_PORT']),
-                             username=os.environ['MONGO_USERNAME'],
-                             password=os.environ['MONGO_PASSWORD'],
-                             )
-        if client:
-            db = client["menu"]
-            return db
-        else:
-            # if cant connect then return error
-            return jsonify(ERR_CODE_NOT_FOUND), 404
-    except:
-        return jsonify({'error': 'Problem with connecting to DB'}), 500
+# def get_db():
+#     try:
+#         client = MongoClient(host=os.environ['MONGO_SERVER_HOST'],
+#                              # convert the port number to make sure its an integer
+#                              port=int(os.environ['MONGO_SERVER_PORT']),
+#                              username=os.environ['MONGO_USERNAME'],
+#                              password=os.environ['MONGO_PASSWORD'], connect=False
+#                              )
+#         if client:
+#             db = client["menu"]
+#             return db
+#         else:
+#             # if cant connect then return error
+#             return jsonify(ERR_CODE_NOT_FOUND), 404
+#     except:
+#         return jsonify({'error': 'Problem with connecting to DB'}), 500
+
+
+app = Flask(__name__)
+CORS(app)
+config_URI = 'mongodb://' + \
+    environ['MONGO_USERNAME'] + ':' + environ['MONGO_PASSWORD'] + '@' + \
+    environ['MONGO_SERVER_HOST'] + ':' + \
+    str(environ['MONGO_SERVER_PORT']) + '/menu?authSource=admin'
+
+app.config['MONGO_URI'] = config_URI
+mongo = PyMongo(app)
+metrics = PrometheusMetrics(app)
+metrics.info("app_info", "Menu API", version="1.0.0")
 
 
 @app.route('/menus/<store_id>', methods=['GET'])
 def getMenu(store_id):
 
     # call the stores
-    db = get_db()
+    # db = get_db()
 
-    menus = db.menu.find(
-        {'store_id': store_id})
+    try:
+        menus = mongo.db.menu.find_one(
+            {'store_id': store_id})
+        return jsonify(menus), 200
+    except Exception as err:
+        abort(500)
 
-    if menus:
-        result = menus
-    else:
-        return jsonify(ERR_CODE_NOT_FOUND), 404
-    return jsonify(result), 200
 
 # PUT upload Menu
 
 
 @app.route('/menus/<store_id>', methods=['PUT'])
 def uploadMenu(store_id):
-    db = get_db()
+    # db = get_db()
 
     id = request.get_json().get('id')
     title = request.get_json().get('title')
     subtitle = request.get_json().get('subtitle')
     category_ids = request.get_json().get('category_ids')
 
-    menu = db.menu.find_one({'store_id': store_id, 'id': id})
+    menu = mongo.db.menu.find_one({'store_id': store_id, 'id': id})
 
     if menu:
         result = [{"id": id, "title": title,
                    "subtitle": subtitle, "category_ids": category_ids, "store_id": store_id}]
         try:
-            db.menu.update_one(result[0])
+            mongo.db.menu.update_one(result[0])
         except Exception as err:
             abort(500)
 
@@ -87,7 +101,7 @@ def uploadMenu(store_id):
                    "subtitle": subtitle, "category_ids": category_ids, "store_id": store_id}]
 
         try:
-            db.menu.insert_one(result[0])
+            mongo.db.menu.insert_one(result[0])
         except Exception as err:
             abort(500)
     return jsonify("Success!"), 200
@@ -99,7 +113,7 @@ def uploadMenu(store_id):
 def setItemById():
 
     try:
-        db = get_db()
+        # db = get_db()
         data = request.args.to_dict()
 
         if 'store_id' not in data.keys():
@@ -107,7 +121,7 @@ def setItemById():
         if 'item_id' not in data.keys():
             return jsonify({'error': 'no item_id specified.'}), 400
         if 'description' in data.keys() and 'title' in data.keys() and 'price' in data.keys():
-            item = db.item.find_one_and_update(
+            item = mongo.db.item.find_one_and_update(
                 {'store_id': data['store_id'], 'item_id': data['item_id']},
                 {
                     '$set': {
@@ -120,7 +134,7 @@ def setItemById():
             if item is None:
                 return jsonify({'message': 'Item not updated successfully'}), 404
         if 'description' in data.keys() and 'title' not in data.keys() and 'price' not in data.keys():
-            item = db.item.find_one_and_update(
+            item = mongo.db.item.find_one_and_update(
                 {'store_id': data['store_id'], 'item_id': data['item_id']},
                 {
                     '$set': {
@@ -132,7 +146,7 @@ def setItemById():
                 return jsonify({'message': 'Item not updated successfully'}), 404
 
         if 'description' in data.keys() and 'title' in data.keys() and 'price' not in data.keys():
-            item = db.item.find_one_and_update(
+            item = mongo.db.item.find_one_and_update(
                 {'store_id': data['store_id'], 'item_id': data['item_id']},
                 {
                     '$set': {
@@ -145,7 +159,7 @@ def setItemById():
                 return jsonify({'message': 'Item not updated successfully'}), 404
 
         if 'description' in data.keys() and 'title' not in data.keys() and 'price' in data.keys():
-            item = db.item.find_one_and_update(
+            item = mongo.db.item.find_one_and_update(
                 {'store_id': data['store_id'], 'item_id': data['item_id']},
                 {
                     '$set': {
@@ -158,7 +172,7 @@ def setItemById():
                 return jsonify({'message': 'Item not updated successfully'}), 404
 
         if 'description' not in data.keys() and 'title' in data.keys() and 'price' in data.keys():
-            item = db.item.find_one_and_update(
+            item = mongo.db.item.find_one_and_update(
                 {'store_id': data['store_id'], 'item_id': data['item_id']},
                 {
                     '$set': {
@@ -171,7 +185,7 @@ def setItemById():
                 return jsonify({'message': 'Item not updated successfully'}), 404
 
         if 'description' not in data.keys() and 'title' in data.keys() and 'price' not in data.keys():
-            item = db.item.find_one_and_update(
+            item = mongo.db.item.find_one_and_update(
                 {'store_id': data['store_id'], 'item_id': data['item_id']},
                 {
                     '$set': {
@@ -183,7 +197,7 @@ def setItemById():
                 return jsonify({'message': 'Item not updated successfully'}), 404
 
         if 'description' not in data.keys() and 'title' not in data.keys() and 'price' in data.keys():
-            item = db.item.find_one_and_update(
+            item = mongo.db.item.find_one_and_update(
                 {'store_id': data['store_id'], 'item_id': data['item_id']},
                 {
                     '$set': {
@@ -210,4 +224,4 @@ def server_error(e):
 
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=9001, debug=False)
+    app.run(host='0.0.0.0', port=9001)
