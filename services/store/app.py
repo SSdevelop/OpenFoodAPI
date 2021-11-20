@@ -1,7 +1,7 @@
 from flask import Flask, json, jsonify, abort, request
 from flask_pymongo import PyMongo
 from os import environ
-from sys import exit, version
+from sys import exit
 from prometheus_flask_exporter import PrometheusMetrics
 from flask_cors import CORS
 

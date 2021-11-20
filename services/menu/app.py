@@ -1,12 +1,14 @@
 # importing required modules
-import os
+from os import environ
 from flask import Flask, jsonify, abort, request
+from flask_pymongo import PyMongo
 from pymongo import MongoClient
 from prometheus_flask_exporter import PrometheusMetrics
-
+from flask_cors import CORS
 
 # init our app
 app = Flask(__name__)
+CORS(app)
 metrics = PrometheusMetrics(app)
 metrics.info("app_info", "Menu API", version="1.0.0")
 
@@ -27,18 +29,26 @@ SUCCESS_CODE = {
 
 def get_db():
     try:
-        client = MongoClient(host=os.environ['MONGO_SERVER_HOST'],
-                             # convert the port number to make sure its an integer
-                             port=int(os.environ['MONGO_SERVER_PORT']),
-                             username=os.environ['MONGO_USERNAME'],
-                             password=os.environ['MONGO_PASSWORD'],
-                             )
-        if client:
-            db = client["menu"]
-            return db
+        # client = MongoClient(host=os.environ['MONGO_SERVER_HOST'],
+        #                      # convert the port number to make sure its an integer
+        #                      port=int(os.environ['MONGO_SERVER_PORT']),
+        #                      username=os.environ['MONGO_USERNAME'],
+        #                      password=os.environ['MONGO_PASSWORD'],
+        #                      )
+        # if client:
+        #     db = client["menus"]
+        #     return db
+        config_URI = 'mongodb://' + \
+            environ['MONGO_USERNAME'] + ':' + environ['MONGO_PASSWORD'] + '@' + \
+            environ['MONGO_SERVER_HOST'] + ':' + \
+            str(environ['MONGO_SERVER_PORT']) + '/menus?authSource=admin'
+        app.config['MONGO_URI'] = config_URI
+        mongo = PyMongo(app)
+        if mongo.db:
+            return mongo.db
         else:
             # if cant connect then return error
-            return jsonify(ERR_CODE_NOT_FOUND), 404
+            return jsonify({'error': 'cannot connect to DB'}), 500
     except:
         return jsonify({'error': 'Problem with connecting to DB'}), 500
 
@@ -49,14 +59,8 @@ def getMenu(store_id):
     # call the stores
     db = get_db()
 
-    menus = db.menu.find(
-        {'store_id': store_id})
-
-    if menus:
-        result = menus
-    else:
-        return jsonify(ERR_CODE_NOT_FOUND), 404
-    return jsonify(result), 200
+    menus = dict(db.menu.find_one_or_404({'store_id': store_id}, {'_id': False}))
+    return jsonify(menus), 200
 
 # PUT upload Menu
 

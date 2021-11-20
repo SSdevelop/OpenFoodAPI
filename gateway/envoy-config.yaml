@@ -52,13 +52,16 @@ static_resources:
                     - match:
                         prefix: "/"
                       route:
-                      # host_rewrite: www.google.com
                         cluster: store_service
                     - match:
                         prefix: "/stores"
                       route:
                       # host_rewrite: www.google.com
                         cluster: store_service
+                    - match:
+                        prefix: "/menus"
+                      route:
+                        cluster: menu_service
                     retry_policy:
                       retry_on: "5xx"
                       num_retries: 3
@@ -85,3 +88,22 @@ static_resources:
                 socket_address:
                   address: store
                   port_value: 9000
+    - name: menu_service
+      connect_timeout: 0.5s
+      type: strict_dns
+      lb_policy: ROUND_ROBIN
+      circuit_breakers:
+        thresholds:
+          max_connections: 1024
+          max_pending_requests: 5
+          max_requests: 5
+          max_retries: 3
+      load_assignment:
+        cluster_name: menu_service
+        endpoints:
+        - lb_endpoints:
+          - endpoint:
+              address:
+                socket_address:
+                  address: menu
+                  port_value: 9001
