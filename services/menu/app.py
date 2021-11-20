@@ -1,6 +1,6 @@
 # importing required modules
 import os
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, abort, request
 from pymongo import MongoClient
 from prometheus_flask_exporter import PrometheusMetrics
 
@@ -28,16 +28,17 @@ SUCCESS_CODE = {
 def get_db():
     try:
         client = MongoClient(host=os.environ['MONGO_SERVER_HOST'],
-                            # convert the port number to make sure its an integer
-                            port=int(os.environ['MONGO_SERVER_PORT']),
-                            username=os.environ['MONGO_USERNAME'],
-                            password=os.environ['MONGO_PASSWORD'],
-                            )
+                             # convert the port number to make sure its an integer
+                             port=int(os.environ['MONGO_SERVER_PORT']),
+                             username=os.environ['MONGO_USERNAME'],
+                             password=os.environ['MONGO_PASSWORD'],
+                             )
         if client:
             db = client["menu"]
             return db
         else:
-            return jsonify(ERR_CODE_NOT_FOUND), 404   # if cant connect then return error
+            # if cant connect then return error
+            return jsonify(ERR_CODE_NOT_FOUND), 404
     except:
         return jsonify({'error': 'Problem with connecting to DB'}), 500
 
@@ -76,8 +77,8 @@ def uploadMenu(store_id):
                    "subtitle": subtitle, "category_ids": category_ids, "store_id": store_id}]
         try:
             db.menu.update_one(result[0])
-        except:
-            print("DB Error")
+        except Exception as err:
+            abort(500)
 
         return jsonify("Menu is updated"), 409
     # if the stud does not exist then add him
@@ -87,44 +88,125 @@ def uploadMenu(store_id):
 
         try:
             db.menu.insert_one(result[0])
-        except:
-            print("DB Error")
+        except Exception as err:
+            abort(500)
     return jsonify("Success!"), 200
 
 # POST update Item
 
-# give the data in form of request body and not parameters.
-# use the correct syntax for updating.
+
 @app.route('/menus/set-item', methods=['POST'])
-def setItemById(store_id, item_id):
-    db = get_db()
+def setItemById():
 
-    item = db.items.find_one({'item_id': item_id, 'store_id': store_id})
+    try:
+        db = get_db()
+        data = request.args.to_dict()
 
-    if item:
-        updated_item = {}
+        if 'store_id' not in data.keys():
+            return jsonify({'error': 'no store_id specified.'}), 400
+        if 'item_id' not in data.keys():
+            return jsonify({'error': 'no item_id specified.'}), 400
+        if 'description' in data.keys() and 'title' in data.keys() and 'price' in data.keys():
+            item = db.item.find_one_and_update(
+                {'store_id': store_id, 'item_id': item_id},
+                {
+                    '$set': {
+                        'description': data['description'],
+                        'title': data['title'],
+                        'price': data['price']
+                    }
+                }
+            )
+            if item is None:
+                return jsonify({'message': 'Item not updated successfully'}), 404
+        if 'description' in data.keys() and 'title' not in data.keys() and 'price' not in data.keys():
+            item = db.item.find_one_and_update(
+                {'store_id': store_id, 'item_id': item_id},
+                {
+                    '$set': {
+                        'description': data['description'],
+                    }
+                }
+            )
+            if item is None:
+                return jsonify({'message': 'Item not updated successfully'}), 404
 
-        if request.get_json().get('id'):
-            id = request.get_json().get('id')
-            updated_item.id = id
-        if request.get_json().get('description'):
-            description = request.get_json().get('description')
-            updated_item.description = description
-        if request.get_json().get('title'):
-            title = request.get_json().get('title')
-            updated_item.title = title
-        if request.get_json().get('price'):
-            price = request.get_json().get('price')
-            updated_item.price = price
+        if 'description' in data.keys() and 'title' in data.keys() and 'price' not in data.keys():
+            item = db.item.find_one_and_update(
+                {'store_id': store_id, 'item_id': item_id},
+                {
+                    '$set': {
+                        'description': data['description'],
+                        'title': data['title'],
+                    }
+                }
+            )
+            if item is None:
+                return jsonify({'message': 'Item not updated successfully'}), 404
 
-        try:
-            db.item.update_one(updated_item)
-        except:
-            print("DB Error")
+        if 'description' in data.keys() and 'title' not in data.keys() and 'price' in data.keys():
+            item = db.item.find_one_and_update(
+                {'store_id': store_id, 'item_id': item_id},
+                {
+                    '$set': {
+                        'description': data['description'],
+                        'price': data['price'],
+                    }
+                }
+            )
+            if item is None:
+                return jsonify({'message': 'Item not updated successfully'}), 404
+
+        if 'description' not in data.keys() and 'title' in data.keys() and 'price' in data.keys():
+            item = db.item.find_one_and_update(
+                {'store_id': store_id, 'item_id': item_id},
+                {
+                    '$set': {
+                        'title': data['title'],
+                        'price': data['price'],
+                    }
+                }
+            )
+            if item is None:
+                return jsonify({'message': 'Item not updated successfully'}), 404
+
+        if 'description' not in data.keys() and 'title' in data.keys() and 'price' not in data.keys():
+            item = db.item.find_one_and_update(
+                {'store_id': store_id, 'item_id': item_id},
+                {
+                    '$set': {
+                        'title': data['title'],
+                    }
+                }
+            )
+            if item is None:
+                return jsonify({'message': 'Item not updated successfully'}), 404
+
+        if 'description' not in data.keys() and 'title' not in data.keys() and 'price' in data.keys():
+            item = db.item.find_one_and_update(
+                {'store_id': store_id, 'item_id': item_id},
+                {
+                    '$set': {
+                        'price': data['price'],
+                    }
+                }
+            )
+            if item is None:
+                return jsonify({'message': 'Item not updated successfully'}), 404
 
         return jsonify(SUCCESS_CODE), 200
-    else:
-        return jsonify(ERR_CODE_NOT_FOUND), 404
+    except Exception as err:
+        abort(500)
+
+
+@app.errorhandler(404)
+def wrong_url(e):
+    return jsonify({'error': 'Not Found'}), 404
+
+
+@app.errorhandler(500)
+def server_error(e):
+    return jsonify({'error': 'Internal Server Error'}), 500
 
 
 if __name__ == "__main__":
