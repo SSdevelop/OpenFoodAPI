@@ -4,6 +4,8 @@ services:
     container_name: store
     depends_on:
       - store_db
+      - fluentbit
+      - elasticsearch
     build:
       context: ./services/store
       dockerfile: Dockerfile
@@ -14,6 +16,11 @@ services:
       - MONGO_SERVER_PORT=27017
     ports:
       - "9000:9000"
+    logging:
+      driver: fluentd
+      options:
+        tag: store
+        fluentd-address: localhost:24224
 
   store_db:
     container_name: store_db
@@ -79,8 +86,61 @@ services:
       - prometheus
     ports:
       - "3000:3000"
+  
+  envoy:
+    image: envoyproxy/envoy:v1.20.0
+    container_name: envoy
+    ports:
+      - "9900:9900"
+      - "10000:10000"
+    volumes:
+      - ./gateway/envoy-config.yaml:/etc/envoy/envoy.yaml
+    environment:
+      - DEBUG_LEVEL=debug
+    depends_on:
+      - store
+      - menu
+      - fluentbit
+      - elasticsearch
+    logging:
+      driver: fluentd
+      options:
+        tag: envoy
 
-
+  fluentbit:
+    image: fluent/fluent-bit:1.8
+    container_name: fluentbit
+    volumes:
+      - ./monitor/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf
+    # restart: always
+    ports:
+      - '24224:24224'
+      - '24224:24224/udp'
+    depends_on:
+      - elasticsearch
+  
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.10.2
+    container_name: elasticsearch
+    # restart: always
+    environment:
+      - "xpack.security.enabled=false"
+      - "discovery.type=single-node"
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+  
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.4.2
+    container_name: kibana
+    # restart: always
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    ports:
+      - 5601:5601
+    depends_on:
+      - elasticsearch
+    
 networks:
   default:
     name: openfood

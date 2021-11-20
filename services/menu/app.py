@@ -108,7 +108,7 @@ def setItemById():
             return jsonify({'error': 'no item_id specified.'}), 400
         if 'description' in data.keys() and 'title' in data.keys() and 'price' in data.keys():
             item = db.item.find_one_and_update(
-                {'store_id': store_id, 'item_id': item_id},
+                {'store_id': data['store_id'], 'item_id': data['item_id']},
                 {
                     '$set': {
                         'description': data['description'],
@@ -121,7 +121,7 @@ def setItemById():
                 return jsonify({'message': 'Item not updated successfully'}), 404
         if 'description' in data.keys() and 'title' not in data.keys() and 'price' not in data.keys():
             item = db.item.find_one_and_update(
-                {'store_id': store_id, 'item_id': item_id},
+                {'store_id': data['store_id'], 'item_id': data['item_id']},
                 {
                     '$set': {
                         'description': data['description'],
@@ -133,7 +133,7 @@ def setItemById():
 
         if 'description' in data.keys() and 'title' in data.keys() and 'price' not in data.keys():
             item = db.item.find_one_and_update(
-                {'store_id': store_id, 'item_id': item_id},
+                {'store_id': data['store_id'], 'item_id': data['item_id']},
                 {
                     '$set': {
                         'description': data['description'],
@@ -146,7 +146,7 @@ def setItemById():
 
         if 'description' in data.keys() and 'title' not in data.keys() and 'price' in data.keys():
             item = db.item.find_one_and_update(
-                {'store_id': store_id, 'item_id': item_id},
+                {'store_id': data['store_id'], 'item_id': data['item_id']},
                 {
                     '$set': {
                         'description': data['description'],
@@ -159,7 +159,7 @@ def setItemById():
 
         if 'description' not in data.keys() and 'title' in data.keys() and 'price' in data.keys():
             item = db.item.find_one_and_update(
-                {'store_id': store_id, 'item_id': item_id},
+                {'store_id': data['store_id'], 'item_id': data['item_id']},
                 {
                     '$set': {
                         'title': data['title'],
@@ -172,7 +172,7 @@ def setItemById():
 
         if 'description' not in data.keys() and 'title' in data.keys() and 'price' not in data.keys():
             item = db.item.find_one_and_update(
-                {'store_id': store_id, 'item_id': item_id},
+                {'store_id': data['store_id'], 'item_id': data['item_id']},
                 {
                     '$set': {
                         'title': data['title'],
@@ -184,7 +184,7 @@ def setItemById():
 
         if 'description' not in data.keys() and 'title' not in data.keys() and 'price' in data.keys():
             item = db.item.find_one_and_update(
-                {'store_id': store_id, 'item_id': item_id},
+                {'store_id': data['store_id'], 'item_id': data['item_id']},
                 {
                     '$set': {
                         'price': data['price'],
