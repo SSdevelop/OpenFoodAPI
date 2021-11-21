@@ -4,6 +4,7 @@ from os import environ
 from sys import exit
 from prometheus_flask_exporter import PrometheusMetrics
 from flask_cors import CORS
+from producer import publish
 
 app = Flask(__name__)
 CORS(app)
@@ -16,6 +17,7 @@ app.config['MONGO_URI'] = config_URI
 mongo = PyMongo(app)
 metrics = PrometheusMetrics(app)
 metrics.info("app_info", "Store API", version="1.0.0")
+
 
 @app.route('/stores', methods=["GET"])
 def get_store():
@@ -32,16 +34,67 @@ def get_store():
     except Exception as err:
         abort(500)
 
+
+@app.route('/stores/add-store', methods=["POST"])
+def add_store():
+    try:
+        if not request.data:
+            return jsonify({'error': 'no data given'}), 400
+        data = request.get_json(force=True)
+        if 'store_id' not in data.keys():
+            return jsonify({'error': 'no store_id given'}), 400
+        if 'location' not in data.keys():
+            return jsonify({'error': 'location information not present'}), 400
+        if 'contact_emails' not in data.keys():
+            return jsonify({'error': 'email information not present'}), 400
+        if 'name' not in data.keys():
+            return jsonify({'error': 'name information not present'}), 400
+        if 'priceBucket' not in data.keys():
+            return jsonify({'error': 'price bucket information not present'}), 400
+        if data['priceBucket'] not in ['$', '$$', '$$$']:
+            return jsonify({'error': 'incorrect price bucket symbol. Must be $, $$ or $$$.'}), 400
+        if 'password' not in data.keys():
+            return jsonify({'error': 'password information not present'}), 400
+        store = list(mongo.db.information.find(
+            {'store_id': data['store_id']}, {'_id': False}))
+        if len(store) != 0:
+            return jsonify({'error': 'store_id present'}), 400
+        mongo.db.information.insert_one({
+            'store_id': data['store_id'],
+            'name': data['name'],
+            "contact_emails": data['contact_emails'],
+            "isOpen": True,
+            "priceBucket": data['priceBucket']
+        })
+        mongo.db.location.insert_one(data['location'])
+
+        publish_body = {'store_id': data['store_id'],
+                        'name': data['name'],
+                        "contact_emails": data['contact_emails'],
+                        "isOpen": True,
+                        "priceBucket": data['priceBucket']}
+
+        publish("store", "addstore", publish_body)
+
+        return jsonify({'message': 'Store Added Successfully'}), 201
+    except:
+        return jsonify({'error': 'internal server error'}), 500
+
+
 @app.route('/stores/<store_id>', methods=["GET"])
 def get_one_store(store_id):
-    store = dict(mongo.db.information.find_one_or_404({'store_id': store_id}, {'_id': False}))
-    location = dict(mongo.db.location.find_one_or_404({'store_id': store_id}, {'_id': False}))
-    store['location']= location
+    store = dict(mongo.db.information.find_one_or_404(
+        {'store_id': store_id}, {'_id': False}))
+    location = dict(mongo.db.location.find_one_or_404(
+        {'store_id': store_id}, {'_id': False}))
+    store['location'] = location
     return jsonify(store), 200
+
 
 @app.route('/stores/status/<store_id>', methods=["GET"])
 def get_store_status(store_id):
-    store = dict(mongo.db.information.find_one_or_404({'store_id': store_id}, {'_id': False}))
+    store = dict(mongo.db.information.find_one_or_404(
+        {'store_id': store_id}, {'_id': False}))
     if store['isOpen']:
         return jsonify({'status': 'Open'}), 200
     output = {}
@@ -49,6 +102,7 @@ def get_store_status(store_id):
     if 'reasonClose' in store.keys():
         output['reason'] = store['reasonClose']
     return jsonify(output), 200
+
 
 @app.route('/stores/set_status/<store_id>', methods=["GET", "PATCH"])
 def set_store_status(store_id):
@@ -98,13 +152,16 @@ def set_store_status(store_id):
     except Exception as err:
         abort(500)
 
+
 @app.errorhandler(404)
 def wrong_url(e):
     return jsonify({'error': 'Not Found'}), 404
 
+
 @app.errorhandler(500)
 def server_error(e):
     return jsonify({'error': 'Internal Server Error'}), 500
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=9000)
