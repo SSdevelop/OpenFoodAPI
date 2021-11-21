@@ -70,6 +70,37 @@ services:
       - '27018:27018'
     restart: on-failure
   
+  authentication:
+    container_name: authentication
+    build:
+      context: ./services/authentication
+      dockerfile: Dockerfile
+    environment:
+      - MYSQL_PASSWORD=authroot
+      - SECRET_KEY=authenticate-the-user
+    depends_on:
+      - authentication_db
+      - fluentbit
+      - elasticsearch
+    ports:
+      - "9004:9004"
+    logging:
+      driver: fluentd
+      options:
+        tag: menu
+        fluentd-address: localhost:24224
+    
+  authentication_db:
+    container_name: authentication_db
+    image: mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=authroot
+    volumes:
+      - ./services/authentication/db:/docker-entrypoint-initdb.d
+    ports:
+      - '3306:3306'
+    restart: on-failure
+  
   prometheus:
     container_name: prometheus
     image: prom/prometheus
