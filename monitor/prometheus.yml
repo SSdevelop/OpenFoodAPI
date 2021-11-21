@@ -14,3 +14,7 @@ scrape_configs:
     scrape_interval: 15s
     static_configs:
       - targets: ['menu:9001']
+  - job_name: 'authentication'
+    scrape_interval: 15s
+    static_configs:
+      - targets: ['authentication:9004']
