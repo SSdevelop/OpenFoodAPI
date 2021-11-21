@@ -81,8 +81,9 @@ services:
     volumes:
       - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
       - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
-    networks:
-      - openfood
+    command: >
+      bash -c "python3 services/menu/consumer_menu.py
+      && python3 services/menu/consumer_auth.py"
 
   authentication:
     container_name: authentication

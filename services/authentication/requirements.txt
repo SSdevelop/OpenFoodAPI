@@ -6,3 +6,4 @@ prometheus-flask-exporter
 Werkzeug
 pymysql
 cryptography
+pika
