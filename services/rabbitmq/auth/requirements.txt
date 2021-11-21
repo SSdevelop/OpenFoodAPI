@@ -1,0 +1,9 @@
+Flask
+PyJWT
+Flask-SQLAlchemy
+flask_cors
+prometheus-flask-exporter
+Werkzeug
+pymysql
+cryptography
+pika

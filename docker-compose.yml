@@ -1,11 +1,47 @@
 version: '3.3'
 services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: 'rabbitmq'
+    ports:
+      # AMQP protocol port
+      - 5672:5672
+      # HTTP management UI
+      - 15672:15672
+    volumes:
+      - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
+      - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
+
+  menu_consumer:
+    build:
+      context: ./rabbitmq/menu
+      dockerfile: Dockerfile
+    depends_on:
+      - menu
+      - rabbitmq
+
+  auth_consumer:
+    build:
+      context: ./rabbitmq/auth
+      dockerfile: Dockerfile
+    depends_on:
+      - auth
+      - rabbitmq
+  store_consumer:
+    build:
+      context: ./rabbitmq/store
+      dockerfile: Dockerfile
+    depends_on:
+      - store
+      - rabbitmq
+
   store:
     container_name: store
     depends_on:
       - store_db
       - fluentbit
       - elasticsearch
+      - rabbitmq
     build:
       context: ./services/store
       dockerfile: Dockerfile
@@ -21,6 +57,7 @@ services:
       options:
         tag: store
         fluentd-address: localhost:24224
+    restart: always
 
   store_db:
     container_name: store_db
@@ -69,21 +106,6 @@ services:
     ports:
       - '27018:27018'
     restart: on-failure
-
-  rabbitmq:
-    image: rabbitmq:3-management
-    container_name: 'rabbitmq'
-    ports:
-      # AMQP protocol port
-      - 5672:5672
-      # HTTP management UI
-      - 15672:15672
-    volumes:
-      - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
-      - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
-    command: >
-      bash -c "python3 services/menu/consumer_menu.py
-      && python3 services/menu/consumer_auth.py"
 
   authentication:
     container_name: authentication

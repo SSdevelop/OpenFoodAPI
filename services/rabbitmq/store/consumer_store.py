@@ -1,11 +1,12 @@
 import pika
 import sys
 import os
+from pymongo import MongoClient
 
 
 def main():
     connection = pika.BlockingConnection(
-        pika.ConnectionParameters('localhost'))
+        pika.ConnectionParameters('rabbitmq'))
     channel = connection.channel()
 
     channel.exchange_declare(
@@ -39,7 +40,7 @@ def get_db():
                              password=os.environ['MONGO_PASSWORD'],
                              )
         if client:
-            db = client["menu"]
+            db = client["store"]
             return db
         else:
             # if cant connect then return error

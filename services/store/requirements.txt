@@ -3,3 +3,4 @@ pymongo
 Flask-PyMongo
 prometheus-flask-exporter
 flask_cors
+pika

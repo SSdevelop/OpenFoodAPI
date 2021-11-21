@@ -9,7 +9,7 @@ from os import environ
 
 def main():
     connection = pika.BlockingConnection(
-        pika.ConnectionParameters('localhost'))
+        pika.ConnectionParameters('rabbitmq'))
     channel = connection.channel()
 
     channel.exchange_declare(
