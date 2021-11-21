@@ -139,6 +139,7 @@ services:
       - menu
       - fluentbit
       - elasticsearch
+      - authentication
     logging:
       driver: fluentd
       options:

@@ -49,10 +49,10 @@ static_resources:
                   - name: local_service
                     domains: ["*"]
                     routes:
-                    - match:
-                        prefix: "/"
-                      route:
-                        cluster: store_service
+                    # - match:
+                    #     prefix: "/"
+                    #   route:
+                    #     cluster: store_service
                     - match:
                         prefix: "/stores"
                       route:
@@ -62,6 +62,10 @@ static_resources:
                         prefix: "/menus"
                       route:
                         cluster: menu_service
+                    - match:
+                        prefix: "/auth"
+                      route:
+                        cluster: auth_service
                     retry_policy:
                       retry_on: "5xx"
                       num_retries: 3
@@ -107,3 +111,22 @@ static_resources:
                 socket_address:
                   address: menu
                   port_value: 9001
+    - name: auth_service
+      connect_timeout: 0.5s
+      type: strict_dns
+      lb_policy: ROUND_ROBIN
+      circuit_breakers:
+        thresholds:
+          max_connections: 1024
+          max_pending_requests: 5
+          max_requests: 5
+          max_retries: 3
+      load_assignment:
+        cluster_name: auth_service
+        endpoints:
+        - lb_endpoints:
+          - endpoint:
+              address:
+                socket_address:
+                  address: authentication
+                  port_value: 9004
