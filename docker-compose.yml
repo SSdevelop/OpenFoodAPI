@@ -50,6 +50,7 @@ services:
       - MONGO_PASSWORD=pass
       - MONGO_SERVER_HOST=store_db
       - MONGO_SERVER_PORT=27017
+      - SECRET_KEY=authenticate-the-user
     ports:
       - '9000:9000'
     logging:

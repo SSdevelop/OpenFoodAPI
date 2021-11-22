@@ -27,6 +27,14 @@ class allUsers(db.Model):
 
 @app.route('/auth/users', methods=['GET'])
 def get_users():
+    if 'x-access-token' not in request.headers:
+        return jsonify({'error': 'No token given'}), 403
+    token = request.headers['x-access-token']
+    data = jwt.decode(token, app.config['SECRET_KEY'], algorithms="HS256")
+    if 'user_role' not in data.keys():
+        return jsonify({'error': 'user_role not specified in the token'}), 403
+    if data['user_role'] != 'admin':
+        return jsonify({'error': 'not authorised'}), 403
     users = allUsers.query.all()
     output = []
     for user in users:
@@ -81,9 +89,9 @@ def login_user():
         return jsonify({'error': 'Password does not match'}), 403
     token = jwt.encode({
         'id': user.id,
-        'role': user.user_role,
+        'user_role': user.user_role,
         'exp': datetime.utcnow() + timedelta(minutes=60)
-    }, app.config['SECRET_KEY'])
+    }, app.config['SECRET_KEY'], algorithm="HS256")
     return jsonify({'token': token}), 200
     # except:
     #     return jsonify({'error': 'Internal Server error'}), 500
