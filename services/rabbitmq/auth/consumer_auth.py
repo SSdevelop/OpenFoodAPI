@@ -6,18 +6,14 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from os import environ
 
-try:
-        app = Flask(__name__)
-        app.config['SECRET_KEY'] = environ['SECRET_KEY']
-        config_uri = 'mysql+pymysql://root:{password}@authentication_db/app_users'.format(
-            password=environ['MYSQL_PASSWORD'])
-        app.config['SQLALCHEMY_DATABASE_URI'] = config_uri
-        app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 
-        db = SQLAlchemy(app)
+app = Flask(__name__)
+app.config['SECRET_KEY'] = environ['SECRET_KEY']
+config_uri = 'mysql+pymysql://root:{password}@authentication_db/app_users'.format(password=environ['MYSQL_PASSWORD'])
+app.config['SQLALCHEMY_DATABASE_URI'] = config_uri
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 
-except:
-        abort(500)
+db = SQLAlchemy(app)
 
 
 class allUsers(db.Model):
