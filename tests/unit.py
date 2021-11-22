@@ -16,7 +16,7 @@ def test_get_token():
             'password': 'admin'
         }
     )
-    data = res.json()
     assert res.status_code == 200
+    data = res.json()
     assert data['token'] != ''
     

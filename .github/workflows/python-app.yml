@@ -23,7 +23,7 @@ jobs:
     - name: Build the Application
       run: docker-compose up -d --build
     - name: Delay
-      run: sleep 5s
+      run: sleep 20s
       shell: bash
     - name: Install dependencies
       run: |
