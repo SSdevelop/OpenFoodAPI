@@ -21,5 +21,16 @@ def test_get_token():
     assert data['token'] != ''
 
 def test_getting_users():
-
+    res = requests.post(
+        url + '/signin',
+        json={
+            'id': 'admin',
+            'password': 'admin'
+        }
+    )
+    assert res.status_code == 200
+    data = res.json()
+    token = data['token']
+    res = requests.get(url + '/signin', headers={'x-access-token': token})
+    assert res.status_code == 200
     
