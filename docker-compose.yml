@@ -88,7 +88,7 @@ services:
     logging:
       driver: fluentd
       options:
-        tag: menu
+        tag: authenticate
         fluentd-address: localhost:24224
     
   authentication_db:
@@ -145,6 +145,7 @@ services:
       driver: fluentd
       options:
         tag: envoy
+        fluentd-address: localhost:24224
 
   fluentbit:
     image: fluent/fluent-bit:1.8
