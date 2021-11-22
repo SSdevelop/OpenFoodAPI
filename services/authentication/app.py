@@ -77,20 +77,20 @@ def login_user():
         return jsonify({'error': 'no ID specified.'}), 400
     if 'password' not in data.keys():
         return jsonify({'error': 'no passoword specified.'}), 400
-    # try:
-    user = allUsers.query.filter_by(id = data['id']).first()
-    if not user:
-        return jsonify({'error': 'No user present'}), 401
-    if data['password'] != user.password:
-        return jsonify({'error': 'Password does not match'}), 403
-    token = jwt.encode({
-        'id': user.id,
-        'user_role': user.user_role,
-        'exp': datetime.utcnow() + timedelta(minutes=60)
-    }, app.config['SECRET_KEY'], algorithm="HS256")
-    return jsonify({'token': token}), 200
-    # except:
-    #     return jsonify({'error': 'Internal Server error'}), 500
+    try:
+        user = allUsers.query.filter_by(id = data['id']).first()
+        if not user:
+            return jsonify({'error': 'No user present'}), 401
+        if data['password'] != user.password:
+            return jsonify({'error': 'Password does not match'}), 403
+        token = jwt.encode({
+            'id': user.id,
+            'user_role': user.user_role,
+            'exp': datetime.utcnow() + timedelta(minutes=60)
+        }, app.config['SECRET_KEY'], algorithm="HS256")
+        return jsonify({'token': token}), 200
+    except:
+        return jsonify({'error': 'Internal Server error'}), 500
 
 @app.errorhandler(404)
 def handle_404(e):
