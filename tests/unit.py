@@ -31,6 +31,6 @@ def test_getting_users():
     assert res.status_code == 200
     data = res.json()
     token = data['token']
-    res = requests.get(url + '/signin', headers={'x-access-token': token})
+    res = requests.get(url + '/users', headers={'x-access-token': token})
     assert res.status_code == 200
     
