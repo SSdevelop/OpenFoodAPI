@@ -33,4 +33,15 @@ def test_getting_users():
     token = data['token']
     res = requests.get(url + '/users', headers={'x-access-token': token})
     assert res.status_code == 200
+
+def test_signup():
+    res = requests.post(
+        url + '/signup',
+        json={
+            'id': 'mcd_hk',
+            'password': 'ilovehk',
+            'user_role': 'store'
+        }
+    )
+    assert res.status_code == 201
     
