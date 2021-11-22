@@ -18,3 +18,7 @@ scrape_configs:
     scrape_interval: 15s
     static_configs:
       - targets: ['authentication:9004']
+  - job_name: 'apiGateway'
+    scrape_interval: 15s
+    static_configs:
+      - targets: ['envoy:9900', 'envoy:10000']
