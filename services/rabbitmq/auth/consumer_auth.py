@@ -6,9 +6,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from os import environ
 
-
-def main():
-    try:
+try:
         app = Flask(__name__)
         app.config['SECRET_KEY'] = environ['SECRET_KEY']
         config_uri = 'mysql+pymysql://root:{password}@authentication_db/app_users'.format(
@@ -18,8 +16,15 @@ def main():
 
         db = SQLAlchemy(app)
 
-    except:
-        return jsonify({'error': 'Problem with connecting to DB'}), 500
+except:
+        abort(500)
+
+
+class allUsers(db.Model):
+    id = db.Column(db.String(20), primary_key=True)
+    password = db.Column(db.String(1024))
+    user_role = db.Column(db.String(10))
+def main():
 
     connection = pika.BlockingConnection(
         pika.ConnectionParameters('rabbitmq'))

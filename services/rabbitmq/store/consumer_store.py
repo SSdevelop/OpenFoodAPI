@@ -46,7 +46,7 @@ def get_db():
             return db
         else:
             # if cant connect then return error
-            return jsonify(ERR_CODE_NOT_FOUND), 404
+            return jsonify({'error': 'not found'}), 404
     except:
         return jsonify({'error': 'Problem with connecting to DB'}), 500
 
@@ -65,13 +65,3 @@ if __name__ == '__main__':
             sys.exit(0)
         except SystemExit:
             os._exit(0)
-
-
-@app.errorhandler(404)
-def wrong_url(e):
-    return jsonify({'error': 'Not Found'}), 404
-
-
-@app.errorhandler(500)
-def server_error(e):
-    return jsonify({'error': 'Internal Server Error'}), 500
