@@ -13,27 +13,51 @@ services:
       - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
 
   menu_consumer:
+    container_name: menu_consumer
     build:
-      context: ./rabbitmq/menu
+      context: ./services/rabbitmq/menu
       dockerfile: Dockerfile
+    environment:
+      - MONGO_USERNAME=menu
+      - MONGO_PASSWORD=pass
+      - MONGO_SERVER_HOST=menu_db
+      - MONGO_SERVER_PORT=27018
+    command: 'python -u consumer_menu.py'
     depends_on:
       - menu
       - rabbitmq
+    restart: always
 
   auth_consumer:
+    container_name: auth_consumer
     build:
-      context: ./rabbitmq/auth
+      context: ./services/rabbitmq/auth
       dockerfile: Dockerfile
+    environment:
+      - MYSQL_PASSWORD=authroot
+      - SECRET_KEY=authenticate-the-user
+    command: 'python -u consumer_auth.py'
     depends_on:
-      - auth
+      - authentication
       - rabbitmq
+    restart: always
+
   store_consumer:
+    container_name: store_consumer
     build:
-      context: ./rabbitmq/store
+      context: ./services/rabbitmq/store
       dockerfile: Dockerfile
+    environment:
+      - MONGO_USERNAME=store
+      - MONGO_PASSWORD=pass
+      - MONGO_SERVER_HOST=store_db
+      - MONGO_SERVER_PORT=27017
+      - SECRET_KEY=authenticate-the-user
+    command: 'python -u consumer_store.py'
     depends_on:
       - store
       - rabbitmq
+    restart: always
 
   store:
     container_name: store

@@ -36,6 +36,17 @@ def get_store():
         abort(500)
 
 
+@app.route('/stores/test', methods=["POST"])
+def test_store():
+    try:
+        publish_body = {"store_id": "1", "store_name": "adistore"}
+        publish("store.addstore", publish_body)
+        return jsonify("Succes in testing"), 200
+    except Exception as err:
+        print(err)
+        abort(500)
+
+
 @app.route('/stores/add-store', methods=["POST"])
 def add_store():
 
@@ -71,12 +82,11 @@ def add_store():
         mongo.db.location.insert_one(data['location'])
 
         publish_body = {'store_id': data['store_id'],
-                        'name': data['name'],
-                        "contact_emails": data['contact_emails'],
-                        "isOpen": True,
-                        "priceBucket": data['priceBucket']}
+                        'store_name': data['name'],
+                        'password': 'password',
+                        'role': 'store'}
 
-        publish("store", "addstore", publish_body)
+        publish("store.addstore", publish_body)
 
         return jsonify({'message': 'Store Added Successfully'}), 201
     except:
@@ -106,17 +116,7 @@ def get_store_status(store_id):
     return jsonify(output), 200
 
 
-<< << << < HEAD
-
-
-@app.route('/stores/set_status/<store_id>', methods=["GET", "PATCH"])
-== == == =
-
-
 @app.route('/stores/set_status/<store_id>', methods=["PATCH"])
->>>>>> > main
-
-
 def set_store_status(store_id):
     if 'x-access-token' not in request.headers:
         return jsonify({'error': 'No token given'}), 403

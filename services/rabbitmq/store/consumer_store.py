@@ -2,6 +2,8 @@ import pika
 import sys
 import os
 from pymongo import MongoClient
+from os import environ
+from flask import Flask, json, jsonify, abort, request
 
 
 def main():
@@ -51,19 +53,7 @@ def get_db():
 
 def callback(ch, method, properties, body):
     print(" [x] %r:%r" % (method.routing_key, body))
-    if method.routing_key == "store.addstore":
-        db.menu.insert_one(newstore_empty_menu)
-        try:
-            # receive the data and put it to the menu_db
-            db = get_db()
-
-            data = json.loads(body)
-
-            newstore_empty_menu = {"id": 'empty_menu_id_' + data['store_id'], "title": 'Empty Menu',
-                                   "subtitle": 'Empty Meny Subtitle', "category_ids": ['item1', 'item2'], "store_id": data['store_id']}
-
-        except:
-            abort(500)
+    # store consumer handling process can be implemented here
 
 
 if __name__ == '__main__':
