@@ -1,4 +1,4 @@
-version: '3.3'
+version: '3'
 services:
   rabbitmq:
     image: rabbitmq:3-management
@@ -149,7 +149,7 @@ services:
     logging:
       driver: fluentd
       options:
-        tag: menu
+        tag: authenticate
         fluentd-address: localhost:24224
 
   authentication_db:
@@ -206,6 +206,7 @@ services:
       driver: fluentd
       options:
         tag: envoy
+        fluentd-address: localhost:24224
 
   fluentbit:
     image: fluent/fluent-bit:1.8
@@ -242,5 +243,4 @@ services:
       - elasticsearch
 
 networks:
-  default:
-    name: openfood
+  openfood:
