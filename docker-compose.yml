@@ -181,6 +181,5 @@ services:
       - elasticsearch
     
 networks:
-  default:
-    name: openfood
+  openfood:
 
