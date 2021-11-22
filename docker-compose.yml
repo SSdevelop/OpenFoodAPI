@@ -1,11 +1,71 @@
 version: '3'
 services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: 'rabbitmq'
+    ports:
+      # AMQP protocol port
+      - 5672:5672
+      # HTTP management UI
+      - 15672:15672
+    volumes:
+      - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
+      - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
+
+  menu_consumer:
+    container_name: menu_consumer
+    build:
+      context: ./services/rabbitmq/menu
+      dockerfile: Dockerfile
+    environment:
+      - MONGO_USERNAME=menu
+      - MONGO_PASSWORD=pass
+      - MONGO_SERVER_HOST=menu_db
+      - MONGO_SERVER_PORT=27018
+    command: 'python -u consumer_menu.py'
+    depends_on:
+      - menu
+      - rabbitmq
+    restart: always
+
+  auth_consumer:
+    container_name: auth_consumer
+    build:
+      context: ./services/rabbitmq/auth
+      dockerfile: Dockerfile
+    environment:
+      - MYSQL_PASSWORD=authroot
+      - SECRET_KEY=authenticate-the-user
+    command: 'python -u consumer_auth.py'
+    depends_on:
+      - authentication
+      - rabbitmq
+    restart: always
+
+  store_consumer:
+    container_name: store_consumer
+    build:
+      context: ./services/rabbitmq/store
+      dockerfile: Dockerfile
+    environment:
+      - MONGO_USERNAME=store
+      - MONGO_PASSWORD=pass
+      - MONGO_SERVER_HOST=store_db
+      - MONGO_SERVER_PORT=27017
+      - SECRET_KEY=authenticate-the-user
+    command: 'python -u consumer_store.py'
+    depends_on:
+      - store
+      - rabbitmq
+    restart: always
+
   store:
     container_name: store
     depends_on:
       - store_db
       - fluentbit
       - elasticsearch
+      - rabbitmq
     build:
       context: ./services/store
       dockerfile: Dockerfile
@@ -16,12 +76,13 @@ services:
       - MONGO_SERVER_PORT=27017
       - SECRET_KEY=authenticate-the-user
     ports:
-      - "9000:9000"
+      - '9000:9000'
     logging:
       driver: fluentd
       options:
         tag: store
         fluentd-address: localhost:24224
+    restart: always
 
   store_db:
     container_name: store_db
@@ -34,8 +95,8 @@ services:
     volumes:
       - ./services/store/init-db.js:/docker-entrypoint-initdb.d/mongo-init.js
     ports:
-      - "27017:27017"
-  
+      - '27017:27017'
+
   menu:
     container_name: menu
     build:
@@ -70,7 +131,7 @@ services:
     ports:
       - '27018:27018'
     restart: on-failure
-  
+
   authentication:
     container_name: authentication
     build:
@@ -84,13 +145,13 @@ services:
       - fluentbit
       - elasticsearch
     ports:
-      - "9004:9004"
+      - '9004:9004'
     logging:
       driver: fluentd
       options:
         tag: authenticate
         fluentd-address: localhost:24224
-    
+
   authentication_db:
     container_name: authentication_db
     image: mysql
@@ -101,7 +162,7 @@ services:
     ports:
       - '3306:3306'
     restart: on-failure
-  
+
   prometheus:
     container_name: prometheus
     image: prom/prometheus
@@ -110,8 +171,8 @@ services:
     depends_on:
       - store
     ports:
-      - "9090:9090"
-  
+      - '9090:9090'
+
   grafana:
     image: grafana/grafana
     container_name: grafana
@@ -123,14 +184,14 @@ services:
     depends_on:
       - prometheus
     ports:
-      - "3000:3000"
-  
+      - '3000:3000'
+
   envoy:
     image: envoyproxy/envoy:v1.20.0
     container_name: envoy
     ports:
-      - "9900:9900"
-      - "10000:10000"
+      - '9900:9900'
+      - '10000:10000'
     volumes:
       - ./gateway/envoy-config.yaml:/etc/envoy/envoy.yaml
     environment:
@@ -158,18 +219,18 @@ services:
       - '24224:24224/udp'
     depends_on:
       - elasticsearch
-  
+
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.10.2
     container_name: elasticsearch
     # restart: always
     environment:
-      - "xpack.security.enabled=false"
-      - "discovery.type=single-node"
+      - 'xpack.security.enabled=false'
+      - 'discovery.type=single-node'
     ports:
-      - "9200:9200"
-      - "9300:9300"
-  
+      - '9200:9200'
+      - '9300:9300'
+
   kibana:
     image: docker.elastic.co/kibana/kibana:7.4.2
     container_name: kibana
@@ -180,7 +241,6 @@ services:
       - 5601:5601
     depends_on:
       - elasticsearch
-    
+
 networks:
   openfood:
-

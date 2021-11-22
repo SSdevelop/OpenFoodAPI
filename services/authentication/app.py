@@ -18,10 +18,12 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 
 db = SQLAlchemy(app)
 
+
 class allUsers(db.Model):
     id = db.Column(db.String(20), primary_key=True)
     password = db.Column(db.String(1024))
     user_role = db.Column(db.String(10))
+
 
 @app.route('/auth/users', methods=['GET'])
 def get_users():
@@ -42,6 +44,7 @@ def get_users():
             'user_role': user.user_role
         })
     return jsonify(output), 200
+
 
 @app.route('/auth/signup', methods=["POST"])
 def singup_users():
@@ -68,6 +71,7 @@ def singup_users():
     except:
         return jsonify({'error': 'cannot connect to database'}), 500
 
+
 @app.route('/auth/signin', methods=["POST"])
 def login_user():
     if not request.data:
@@ -92,9 +96,11 @@ def login_user():
     except:
         return jsonify({'error': 'Internal Server error'}), 500
 
+
 @app.errorhandler(404)
 def handle_404(e):
     return jsonify({'error': 'Not Found'}), 404
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=9004, debug=False)

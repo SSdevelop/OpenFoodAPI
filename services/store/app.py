@@ -4,6 +4,7 @@ from os import environ
 from sys import exit
 from prometheus_flask_exporter import PrometheusMetrics
 from flask_cors import CORS
+from producer import publish
 import jwt
 
 app = Flask(__name__)
@@ -17,6 +18,7 @@ app.config['MONGO_URI'] = config_URI
 mongo = PyMongo(app)
 metrics = PrometheusMetrics(app)
 metrics.info("app_info", "Store API", version="1.0.0")
+
 
 @app.route('/stores', methods=["GET"])
 def get_store():
@@ -32,6 +34,18 @@ def get_store():
         return jsonify(stores), 200
     except Exception as err:
         abort(500)
+
+
+@app.route('/stores/test', methods=["POST"])
+def test_store():
+    try:
+        publish_body = {"store_id": "1", "store_name": "adistore"}
+        publish("store.addstore", publish_body)
+        return jsonify("Succes in testing"), 200
+    except Exception as err:
+        print(err)
+        abort(500)
+
 
 @app.route('/stores/add-store', methods=["POST"])
 def add_store():
@@ -54,7 +68,8 @@ def add_store():
             return jsonify({'error': 'incorrect price bucket symbol. Must be $, $$ or $$$.'}), 400
         if 'password' not in data.keys():
             return jsonify({'error': 'password information not present'}), 400
-        store = list(mongo.db.information.find({'store_id': data['store_id']}, {'_id': False}))
+        store = list(mongo.db.information.find(
+            {'store_id': data['store_id']}, {'_id': False}))
         if len(store) != 0:
             return jsonify({'error': 'store_id present'}), 400
         mongo.db.information.insert_one({
@@ -65,6 +80,14 @@ def add_store():
             "priceBucket": data['priceBucket']
         })
         mongo.db.location.insert_one(data['location'])
+
+        publish_body = {'store_id': data['store_id'],
+                        'store_name': data['name'],
+                        'password': 'password',
+                        'role': 'store'}
+
+        publish("store.addstore", publish_body)
+
         return jsonify({'message': 'Store Added Successfully'}), 201
     except:
         return jsonify({'error': 'internal server error'}), 500
@@ -72,14 +95,18 @@ def add_store():
 
 @app.route('/stores/<store_id>', methods=["GET"])
 def get_one_store(store_id):
-    store = dict(mongo.db.information.find_one_or_404({'store_id': store_id}, {'_id': False}))
-    location = dict(mongo.db.location.find_one_or_404({'store_id': store_id}, {'_id': False}))
-    store['location']= location
+    store = dict(mongo.db.information.find_one_or_404(
+        {'store_id': store_id}, {'_id': False}))
+    location = dict(mongo.db.location.find_one_or_404(
+        {'store_id': store_id}, {'_id': False}))
+    store['location'] = location
     return jsonify(store), 200
+
 
 @app.route('/stores/status/<store_id>', methods=["GET"])
 def get_store_status(store_id):
-    store = dict(mongo.db.information.find_one_or_404({'store_id': store_id}, {'_id': False}))
+    store = dict(mongo.db.information.find_one_or_404(
+        {'store_id': store_id}, {'_id': False}))
     if store['isOpen']:
         return jsonify({'status': 'Open'}), 200
     output = {}
@@ -88,12 +115,14 @@ def get_store_status(store_id):
         output['reason'] = store['reasonClose']
     return jsonify(output), 200
 
+
 @app.route('/stores/set_status/<store_id>', methods=["PATCH"])
 def set_store_status(store_id):
     if 'x-access-token' not in request.headers:
         return jsonify({'error': 'No token given'}), 403
     token = request.headers['x-access-token']
-    decoded_token = jwt.decode(token, environ['SECRET_KEY'], algorithms="HS256")
+    decoded_token = jwt.decode(
+        token, environ['SECRET_KEY'], algorithms="HS256")
     if store_id != decoded_token['id']:
         return jsonify({'error': 'not authorised'}), 403
     if decoded_token['user_role'] not in ['store', 'admin']:
@@ -144,13 +173,16 @@ def set_store_status(store_id):
     except Exception as err:
         abort(500)
 
+
 @app.errorhandler(404)
 def wrong_url(e):
     return jsonify({'error': 'Not Found'}), 404
 
+
 @app.errorhandler(500)
 def server_error(e):
     return jsonify({'error': 'Internal Server Error'}), 500
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=9000)

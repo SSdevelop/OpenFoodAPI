@@ -5,7 +5,6 @@ from flask_pymongo import PyMongo
 from pymongo import MongoClient
 from prometheus_flask_exporter import PrometheusMetrics
 from flask_cors import CORS
-
 # init our app
 app = Flask(__name__)
 CORS(app)
@@ -59,7 +58,8 @@ def getMenu(store_id):
     # call the stores
     db = get_db()
 
-    menus = dict(db.menu.find_one_or_404({'store_id': store_id}, {'_id': False}))
+    menus = dict(db.menu.find_one_or_404(
+        {'store_id': store_id}, {'_id': False}))
     return jsonify(menus), 200
 
 # PUT upload Menu
