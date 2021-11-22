@@ -3,7 +3,6 @@
 Authors:
 - Srijan SRIVASTAVA (19085314D)
 - Adilet DANIIAROV (18078666D)
-- Mario CHANGI (17086999D)
 - Diwakar SINGH (18080434D)
 
 
@@ -27,7 +26,7 @@ The microservice architecture is depicted as below:
 ![Microservice Architecture of the API:](img/MicroservicesDiagram.png)
 
 
-**TODO** 
-- Decide on automated testing mediums.
-- Decide on DevOps platform.
-- Complete the microservices.
+Run the applicaiton using:
+```sh
+docker-compose up --build
+```
