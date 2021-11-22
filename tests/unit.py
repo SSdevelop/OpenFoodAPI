@@ -19,4 +19,7 @@ def test_get_token():
     assert res.status_code == 200
     data = res.json()
     assert data['token'] != ''
+
+def test_getting_users():
+
     
