@@ -4,6 +4,7 @@ from os import environ
 from sys import exit
 from prometheus_flask_exporter import PrometheusMetrics
 from flask_cors import CORS
+import jwt
 
 app = Flask(__name__)
 CORS(app)
@@ -34,6 +35,7 @@ def get_store():
 
 @app.route('/stores/add-store', methods=["POST"])
 def add_store():
+
     try:
         if not request.data:
             return jsonify({'error': 'no data given'}), 400
@@ -86,8 +88,16 @@ def get_store_status(store_id):
         output['reason'] = store['reasonClose']
     return jsonify(output), 200
 
-@app.route('/stores/set_status/<store_id>', methods=["GET", "PATCH"])
+@app.route('/stores/set_status/<store_id>', methods=["PATCH"])
 def set_store_status(store_id):
+    if 'x-access-token' not in request.headers:
+        return jsonify({'error': 'No token given'}), 403
+    token = request.headers['x-access-token']
+    decoded_token = jwt.decode(token, environ['SECRET_KEY'], algorithms="HS256")
+    if store_id != decoded_token['id']:
+        return jsonify({'error': 'not authorised'}), 403
+    if decoded_token['user_role'] not in ['store', 'admin']:
+        return jsonify({'error': 'not authorised'}), 403
     try:
         data = request.args.to_dict()
         if 'status' not in data.keys():
